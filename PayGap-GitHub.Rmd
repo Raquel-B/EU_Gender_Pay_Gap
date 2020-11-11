@@ -310,3 +310,5 @@ ggplot(mapdata, aes(fill = cat)) +
 anim_save(filename = "gm_animate.gif")
 
 ```
+
+This last animation is not working properly

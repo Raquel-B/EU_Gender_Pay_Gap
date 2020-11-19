@@ -45,6 +45,7 @@ source link: https://ec.europa.eu/eurostat/databrowser/view/sdg_05_20/
 **Copyrights:** Eurostat Copyright/Licence Policy is applicable.
 
 ## Other important information
+
 online data code: SDG_05_20
 Source of data: Eurostat
 Last data update: 29/10/2020  22:00 (19 days ago)
@@ -52,7 +53,6 @@ Last structure update: 29/10/2020
 Overall data coverage: 2002 — 2018
 Number of values: 433
 
-# Questions to Answer
 
 ```{r library}
 
@@ -227,7 +227,7 @@ ggplot(mapdata, aes(fill = cat)) +
 ## Let's try with 2006
 
 ### Bar chart
-```{r bar_chart}
+```{r bar_chart1}
 
 library(gghighlight)
 
@@ -242,7 +242,7 @@ ggplot (dat_2006, aes(x= reorder(geo, values), y = values)) +
 ```
 
 ### Map
-```{r map}
+```{r map1}
 
 mapdata <-  get_eurostat_geospatial(nuts_level = 0) %>% 
   right_join (dat_2006) %>% 
@@ -252,7 +252,7 @@ head(select(mapdata,geo,values,cat), 3)
 ```
 
 
-```{r plot_map}
+```{r plot_map1}
 
 ggplot(mapdata, aes(fill = cat)) + 
   scale_fill_brewer(palette = "RdYlBu") + 

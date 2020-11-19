@@ -228,10 +228,14 @@ ggplot(mapdata, aes(fill = cat)) +
 
 ### Bar chart
 ```{r bar_chart}
+
+library(gghighlight)
+
 dat_2006 <- dat %>% 
   filter(time == "2006-01-01")
 ggplot (dat_2006, aes(x= reorder(geo, values), y = values)) + 
-  geom_col (color = "white", fill = "grey80") + 
+  geom_col (color = "white", fill = "tomato") + 
+  gghighlight(geo == "PT") +
   theme ( axis.text.x = element_text (size = 6)) + 
   labs (title = "Gender Pay Gap in 2006", 
         y = "%", x = NULL)
@@ -267,7 +271,8 @@ ggplot(mapdata, aes(fill = cat)) +
 dat_2018 <- dat %>% 
   filter(time == "2018-01-01")
 ggplot (dat_2018, aes(x= reorder(geo, values), y = values)) + 
-  geom_col (color = "white", fill = "grey80") + 
+  geom_col (color = "white", fill = "tomato") + 
+  gghighlight(geo == "PT") +
   theme ( axis.text.x = element_text (size = 6)) + 
   labs (title = "Gender Pay Gap in 2018", 
         y = "%", x = NULL)
@@ -315,11 +320,6 @@ ggplot (dat, aes(x= reorder(geo, values), y = values)) +
 
 ## Map
 
-# this is not working...
-
-is.data.table(dat) == TRUE
-dat[, c("unit", "nace_r2"):=NULL]
-
 
 ```{r animated_plot}
 
@@ -338,7 +338,6 @@ ggplot(mapdata, aes(fill = cat)) +
   labs(title = 'Year: {frame_time}') +
   transition_time(time) +
   ease_aes()
-
 
 ```
 

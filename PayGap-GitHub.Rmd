@@ -142,7 +142,23 @@ ggplot(dat, aes(time, values, color = geo, label = geo)) +
 
 ```
 
+## Bar chart 
+
+```{r animated_bar_chart1}
+
+ggplot (dat, aes(x= reorder(geo, values), y = values)) + 
+  geom_col (color = "white", fill = "grey80") + 
+  theme ( axis.text.x = element_text (size = 6)) + 
+  labs( title = "Gender Pay Gap in 2019",
+        subtitle = "% of average gross hourly earnings of men",
+        fill = "%") + 
+  labs(title = 'Year: {frame_time}') +
+  transition_time(time) +
+  ease_aes()
+```
+
 # Portugal vs. European Union, 2006-2018
+
 
 **Portugal has no available data until 2006 and the EU only has available data from 2010 on**
 (again, there is  no available data for 2019)
@@ -204,6 +220,7 @@ ggplot(mapdata, aes(fill = cat)) +
         fill = "%")
 ```
 
+
 **only a few countries have available data for 2002**
 **Portugal only has available data from 2006 on**
 
@@ -223,6 +240,7 @@ ggplot (dat_2006, aes(x= reorder(geo, values), y = values)) +
   labs (title = "Gender Pay Gap in 2006", 
         y = "%", x = NULL)
 ```
+
 **Portugal is highlighted for analysis and comparison**
 
 ### Map
@@ -286,19 +304,4 @@ ggplot(mapdata, aes(fill = cat)) +
         fill = "%")
 ```
 
-# ANIMATIONS FROM 2002 TO 2019
 
-## Bar chart
-
-```{r animated_bar_chart1}
-
-ggplot (dat, aes(x= reorder(geo, values), y = values)) + 
-  geom_col (color = "white", fill = "grey80") + 
-  theme ( axis.text.x = element_text (size = 6)) + 
-  labs( title = "Gender Pay Gap in 2019",
-        subtitle = "% of average gross hourly earnings of men",
-        fill = "%") + 
-  labs(title = 'Year: {frame_time}') +
-  transition_time(time) +
-  ease_aes()
-```

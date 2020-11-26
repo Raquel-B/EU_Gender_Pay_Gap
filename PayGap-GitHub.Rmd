@@ -21,9 +21,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
-*We will use Eurostat’s indicator data for “Gender pay gap in unadjusted form” as a case study when working with the data.table R package and apply a few animations using gganimate. The goal is to explore the geographical and time trends for the gender pay gap in the EU and compare Portugal with some EU's countries*
+**We will use Eurostat’s indicator data for “Gender pay gap in unadjusted form” as a case study when working with the data.table R package and apply a few animations using gganimate. The goal is to explore the geographical and time trends for the gender pay gap in the EU and compare Portugal with some EU's countries**
 
-We will start by learning about and understanding the raw data, which we will then process (“wrangle”) in preparation for some exploratory analysis.*
+We will start by learning how to understand the data and extract it from the Eurostat package within R. We will then process in preparation for some exploratory analysis.*
 
 # Objective
 The objective is to look at the geographical and time trends in the data. We will

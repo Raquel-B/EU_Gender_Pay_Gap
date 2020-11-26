@@ -96,7 +96,7 @@ PTandEU <-  c("PT","EU27_2020")
 
 ```
 
-# Variables dat and dat1
+# Defining variables dat and dat1
 
 ## dat = Every country in the EU separately
 ## dat1 = Portugal vs EU
@@ -136,7 +136,7 @@ dat1[, c("unit", "nace_r2"):=NULL]
 
 ```
 
-# Evolution of Gender Pay Gap in EU, 2002-2018
+# Evolution of Gender Pay Gap in EU, from 2002-2018
 
 (there is no available data for 2019)
 
@@ -162,7 +162,7 @@ ggplot(dat,
   ease_aes('linear')
 ```
 
-## The same line graph, but animated
+## ... The same line graph, but animated
 
 ```{r animated_line}
 ggplot(dat, aes(time, values, color = geo, label = geo)) +
@@ -182,7 +182,7 @@ ggplot(dat, aes(time, values, color = geo, label = geo)) +
 
 ```
 
-## Bar chart 
+## ... in an animated bar chart 
 
 ```{r animated_bar_chart1}
 
@@ -198,7 +198,6 @@ ggplot (dat, aes(x= reorder(geo, values), y = values)) +
 ```
 
 # Portugal vs. European Union, 2006-2018
-
 
 **Portugal has no available data until 2006 and the EU only has available data from 2010 on**
 (again, there is  no available data for 2019)

@@ -1,6 +1,6 @@
 ---
 title: "Gender Pay Gap in the EU"
-author: "Raquel Baltazar - With Saghir's Changes"
+author: "Raquel Baltazar - With Saghir's Updates"
 date: "`r format(Sys.time(), '%a %d %b %Y (%H:%M:%S)')`"
 output:
   html_document:
@@ -62,6 +62,8 @@ library(kableExtra)
 library(ggplot2)
 library(ggrepel)
 library(gganimate)
+library(gifski)
+library(gghighlight)
 ```
 
 # Data processing
@@ -78,21 +80,30 @@ pgapEU <- get_eurostat(id="sdg_05_20", time_format = "num") %>%
 # We will work with the `data.table` package.
 setDT(pgapEU)
 
+#_# To do 
+# Best to get the map data first so we can merge it directly to the indicator data.
+# mapEU <- get_eurostat_geospatial(nuts_level = 0)
+# setDT(mapEU)
+
+
 # Update the `geo` variable to make it print and plot friendly.
 pgap <- pgapEU[, geo_orig := geo] %>%
   .[, geo := fifelse(geo_code == "DE", "Germany", geo)] %>%
   .[, geo := fifelse(grepl("^EU|^EA", geo_code), gsub("_", " ", geo_code), geo)] %>% 
 # Creating a variable geo_label to label lines just once.
 # %>%  .[, lastYear := max(time), .(geo_code)] %>% 
-  .[, geo_label := ifelse(time == max(time), geo_code, ""), .(geo_code)] %>% 
+  .[, geo_label_right := ifelse(time == max(time), geo_code, ""), .(geo_code)] %>% 
+  .[, geo_label_left := ifelse(time == min(time), geo_code, ""), .(geo_code)] %>% 
   .[, c("nace_r2"):=NULL]
+ #_# To do
+ # mutate (cat = cut_to_classes (values, n = 4, decimals = 1))
 ```
 
 We will highlight some countries to compare Portugal with.
 ```{r compareCountries}
 # Define a list of countries of interes that will be used later.
-ct <-  c("AT", "BE", "DE", "ES", "FR", "NL", "IT", "PT", "GR")
-PTEU <-  c("PT","EU27_2020")
+ct <-  c("AT", "BE", "DE", "ES", "FR", "NL", "IT", "PT", "GR", "EU27_2020")
+PTEU <-  c("PT", "EU27_2020")
 ```
 
 
@@ -104,9 +115,6 @@ Some data summaries to understand the data that we have.
 # Distinct years
 pgap[, c(time)] %>% unique(.) %>% sort(.)
 
-# Distinct Countries
-pgap[, c(geo)] %>% unique(.) %>% sort(.)
-
 # Information by country
 pgap[, .(countryData = sprintf("%2s %15s: %4.0f-%4.0f (%2.0f)", geo_code, geo, min(time), max(time), .N)),
      .(geo_code, geo)] %>% 
@@ -115,204 +123,84 @@ pgap[, .(countryData = sprintf("%2s %15s: %4.0f-%4.0f (%2.0f)", geo_code, geo, m
 ```
 
 
-# Evolution of Gender Pay Gap in EU, from 2002-2018
+# Evolution of Gender Pay Gap in EU over Time
 
 ## Line graph
 
-```{r eurostat_and_plots}
-pgap[geo_code %chin% ct] %>% 
+```{r byCountryLinePlot}
+pg01 <- pgap[geo_code %chin% ct] %>% 
 ggplot(aes(x = time, y= values, color = geo, label = geo)) + 
+  geom_line (alpha = .8, size = 1) +
+  geom_point() +
+  scale_y_continuous(breaks = seq(0, 30, 5), limits = c(0,30)) +
+  scale_x_continuous(breaks = seq(2002, 2018, 2), limits = c(2002, 2019)) +
+  theme(legend.position = "none") + 
+  geom_text_repel(aes(label=geo_label_right),
+                  direction = "y",
+                  nudge_x = .85,
+                  segement.alpha = 0.2,
+                  segment.color = "grey80") +
+  labs(title = "Gender Pay Gap Over Time",
+       x= "Year", 
+       y= "% Average Difference",
+       caption = "Unadjusted % difference between average gross hourly earnings of male paid employees and of females.")
+
+pg01
+```
+
+## Animated Line graph
+
+```{r byCountryLinePlotAnimated}
+pg01 +
+    geom_text_repel(aes(label=geo_code),
+                  direction = "y",
+                  nudge_x = .75,
+                  segement.alpha = 0.7,
+                  segment.colour = "grey80") +
+  transition_reveal(time) +
+  geom_point()
+```
+
+## Portugal vs. European Union, 2010-2018
+
+**Portugal has no available data until 2006 and the EU only has available data from 2010 onwards.**
+
+```{r PT_vs_EU}
+pg02 <- pgap[geo_code %chin% PTEU] %>% 
+  ggplot(aes(x = time, y= values, color = geo, label = geo)) + 
+  geom_line(data = pgap, aes(x = time, y= values, group = geo), colour ="grey70", alpha = .5) +
   geom_line (alpha = .8, size = 1) +
   scale_y_continuous(breaks = seq(0, 30, 5), limits = c(0,30)) +
   scale_x_continuous(breaks = seq(2002, 2018, 2), limits = c(2002, 2019)) +
   theme(legend.position = "none") + 
-  geom_text_repel(aes(label=geo_label),
+  geom_text_repel(aes(label=geo_label_right),
                   direction = "y",
                   nudge_x = .45,
                   segement.alpha = 0.7) +
   labs(title = "Gender Pay Gap, 2003-2018",
        x= "Year", 
        y= "% Average Difference",
-       caption = "Unadjusted % difference between average gross hourly earnings of male paid employees and of females."
-       )
+       caption = "Unadjusted % difference between average gross hourly earnings of male paid employees and of females.")
+pg02
 ```
 
-## ... The same line graph, but animated
+## Gender Pay Gap - Bar Charts
 
-```{r animated_line}
-pgap %>% 
-ggplot(aes(time, values, color = geo, label = geo)) +
-  geom_line(alpha = .5) +
- theme(legend.position = "none") + 
-  scale_color_viridis_d() +
-  labs(x = "Year", y = "Gender Pay Gap") +
-  theme(legend.position = "top") + 
-  labs(title = "Gender Pay Gap, 2002-2018",
-       x= "Year", y= "%") +
-  transition_reveal(time) +
-  geom_point()
-
-```
-
-## ... in an animated bar chart 
-
-```{r animated_bar_chart1}
-pgap %>% 
-ggplot (aes(x= reorder(geo, values), y = values)) + 
+```{r pagaBarPlot}
+pgap[time %in% c(2010, 2012, 2014, 2018) & geo_code %chin% ct] %>% 
+ggplot (aes(x= reorder(geo_code, values), y = values)) + 
+  facet_wrap(~time) +
   geom_col (color = "white", fill = "grey80") + 
-  theme ( axis.text.x = element_text (size = 6)) + 
-  labs( title = "Gender Pay Gap in 2019",
-        subtitle = "% of average gross hourly earnings of men",
-        fill = "%") + 
-  labs(title = 'Year: {frame_time}') +
-  transition_time(time) +
-  ease_aes()
+  theme (axis.text.x = element_text (size = 6)) + 
+  gghighlight(geo_code == "PT") +
+  labs(title = "Gender Pay Gap Over Time",
+       x= "Year", 
+       y= "% Average Difference",
+       caption = "Unadjusted % difference between average gross hourly earnings of male paid employees and of females.") +
+  coord_flip()
 ```
 
-# Portugal vs. European Union, 2006-2018
+## Gender Pay Gap - Bar Charts
 
-**Portugal has no available data until 2006 and the EU only has available data from 2010 on**
-(again, there is  no available data for 2019)
-
-# line graph
-```{r PT_vs_EU}
-
-pteu <-  c("European Union - 27 countries (from 2020)","Portugal")
-
-library(ggplot2)
-library(dplyr)
-ggplot(dat1, 
-       aes(x = time, y= values, color = geo, label = geo)) + 
-  geom_line (alpha = .5) +
-  geom_text (data = dat1 %>% group_by(geo) %>% 
-               filter(time == max(time)),
-             size =2.6) +
-  theme(legend.position = "none") + 
-  labs(title = "Gender Pay Gap, 2006-2019",
-       x= "Year", y= "%")
-```
-
-# Then vs Now 
-Now we compare the first and the latest years [2002 vs. 2019] provided in the dataset individually.  
-
-## Gender Pay Gap in 2002
-
-### Bar Chart
-
-```{r bar_chart}
-dat_2002 <- dat %>% 
-  filter(time == "2002-01-01")
-ggplot (dat_2002, aes(x= reorder(geo, values), y = values)) + 
-  geom_col (color = "white", fill = "grey80") + 
-  theme ( axis.text.x = element_text (size = 6)) + 
-  labs (title = "Gender Pay Gap in 2002", 
-        y = "%", x = NULL)
-```
-
-### Map
-```{r map}
-
-mapdata <-  get_eurostat_geospatial(nuts_level = 0) %>% 
-  right_join (dat_2002) %>% 
-  mutate (cat = cut_to_classes (values, n = 4, decimals = 1))
-head(select(mapdata,geo,values,cat), 3)
-
-```
-
-
-```{r plot_map}
-
-ggplot(mapdata, aes(fill = cat)) + 
-  scale_fill_brewer(palette = "RdYlBu") + 
-  geom_sf (color = alpha("white", 1/3), alpha = .6) + 
-  xlim (c(-12,44)) + ylim(c(35, 70)) + 
-  labs( title = "Gender Pay Gap in 2002",
-        subtitle = "% of average gross hourly earnings of men",
-        fill = "%")
-```
-
-
-**only a few countries have available data for 2002**
-**Portugal only has available data from 2006 on**
-
-## Let's try using 2006 as a starting point
-
-### Bar chart
-```{r bar_chart1}
-
-library(gghighlight)
-
-dat_2006 <- dat %>% 
-  filter(time == "2006-01-01")
-ggplot (dat_2006, aes(x= reorder(geo, values), y = values)) + 
-  geom_col (color = "white", fill = "tomato") + 
-  gghighlight(geo == "PT") +
-  theme ( axis.text.x = element_text (size = 6)) + 
-  labs (title = "Gender Pay Gap in 2006", 
-        y = "%", x = NULL)
-```
-
-**Portugal is highlighted for analysis and comparison**
-
-### Map
-```{r map1}
-
-mapdata <-  get_eurostat_geospatial(nuts_level = 0) %>% 
-  right_join (dat_2006) %>% 
-  mutate (cat = cut_to_classes (values, n = 4, decimals = 1))
-head(select(mapdata,geo,values,cat), 3)
-
-```
-
-
-```{r plot_map1}
-
-ggplot(mapdata, aes(fill = cat)) + 
-  scale_fill_brewer(palette = "RdYlBu") + 
-  geom_sf (color = alpha("white", 1/3), alpha = .6) + 
-  xlim (c(-12,44)) + ylim(c(35, 70)) + 
-  labs( title = "Gender Pay Gap in 2006",
-        subtitle = "% of average gross hourly earnings of men",
-        fill = "%")
-```
-## Gender Pay Gap in 2018
-
-(again, there is  no available data for 2019)
-
-### Bar Chart
-
-```{r bar_chart2}
-
-dat_2018 <- dat %>% 
-  filter(time == "2018-01-01")
-ggplot (dat_2018, aes(x= reorder(geo, values), y = values)) + 
-  geom_col (color = "white", fill = "tomato") + 
-  gghighlight(geo == "PT") +
-  theme ( axis.text.x = element_text (size = 6)) + 
-  labs (title = "Gender Pay Gap in 2018", 
-        y = "%", x = NULL)
-```
-
-### Map
-```{r map2}
-
-mapdata <-  get_eurostat_geospatial(nuts_level = 0) %>% 
-  right_join (dat_2018) %>% 
-  mutate (cat = cut_to_classes (values, n = 4, decimals = 1))
-head(select(mapdata,geo,values,cat), 3)
-
-```
-
-
-```{r plot_map2}
-
-ggplot(mapdata, aes(fill = cat)) + 
-  scale_fill_brewer(palette = "RdYlBu") + 
-  geom_sf (color = alpha("white", 1/3), alpha = .6) + 
-  xlim (c(-12,44)) + ylim(c(35, 70)) + 
-  labs( title = "Gender Pay Gap in 2018",
-        subtitle = "% of average gross hourly earnings of men",
-        fill = "%")
-```
-
+**TO DO**
 

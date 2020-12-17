@@ -155,13 +155,16 @@ pg01
 ## Animated Line graph
 
 ```{r byCountryLinePlotAnimated}
-pg01 +
+pg01anim <- pg01 +
     geom_text_repel(aes(label=geo_code),
                   direction = "y",
                   nudge_x = .75,
                   segement.alpha = 0.7,
                   segment.colour = "grey80") +
   transition_reveal(time)
+
+pg01anim
+# anim_save("GenderPayGap_Animated.gif")
 ```
 
 ## Portugal vs. European Union, 2010-2018
@@ -190,7 +193,7 @@ pg02
 ## Gender Pay Gap - Bar Charts
 
 ```{r pagaBarPlot}
-pgap[time %in% c(2010, 2014, 2018) & geo_code %chin% ct] %>% 
+pg03 <- pgap[time %in% c(2010, 2014, 2018) & geo_code %chin% ct] %>% 
 ggplot (aes(x = reorder(geo_code, values), y = values, fill = timeF)) + 
   geom_bar(stat = "identity", alpha=.8, width=.8, position = "dodge") +  
   # facet_wrap(~time, scales = "free_x") +
@@ -205,6 +208,8 @@ ggplot (aes(x = reorder(geo_code, values), y = values, fill = timeF)) +
   theme (axis.text.x = element_text (size = 6),
          legend.position = "bottom") + 
   coord_flip()
+
+pg03
 ```
 
 ## Gender Pay Gap - Bar Charts
